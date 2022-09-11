@@ -1,0 +1,1092 @@
+---
+title: " Bulk RNA-Seq Analysis"
+authors: "Erik Bot, Lara Colombo"
+output: html_document
+---
+
+```{r}
+library(recount3)
+library(edgeR)
+```
+
+# ANALYSIS ON THE COMPLETE DATASET
+
+## LOADING THE DATA
+
+We first load the datasets and select three random replicates, discarding each sample not satisfying the quality parameters.
+
+### BRAIN
+
+```{r}
+rse_brain <- readRDS('rse_brain.RDS')
+```
+
+First, we transform the counts because they are stored as overall read coverage over exons. 
+
+```{r}
+assays(rse_brain)$counts <- transform_counts(rse_brain)
+```
+
+Checking some info about the source of each sample: 
+
+```{r}
+# checking the info about the source organs of the samples
+
+table(colData(rse_brain)$gtex.smtsd)
+```
+
+```{r}
+# checking the info about the age of the donors 
+
+table(colData(rse_brain)$gtex.age)
+```
+
+```{r}
+# checking the info about the sex of the donor
+
+table(colData(rse_brain)$gtex.sex)
+```
+
+We can also check the available info about the processing of the data: 
+
+```{r}
+# REPLICATE 59 
+
+# number of reads in the replicate
+
+colData(rse_brain)[59,]$"recount_qc.star.number_of_input_reads_both"
+
+# QUALITY PARAMETERS 
+
+# percentage of uniquely mapped reads
+
+colData(rse_brain)[59,]$'recount_qc.star.uniquely_mapped_reads_%_both'
+
+# RIN
+
+colData(rse_brain)[59,]$gtex.smrin
+
+# percentage of rRNA
+
+colData(rse_brain)[59,]$gtex.smrrnart
+```
+
+```{r}
+# REPLICATE 63 
+
+# number of reads in the replicate
+
+colData(rse_brain)[63]$"recount_qc.star.number_of_input_reads_both"
+
+# QUALITY PARAMETERS 
+
+# percentage of uniquely mapped reads
+
+colData(rse_brain)[63,]$'recount_qc.star.uniquely_mapped_reads_%_both'
+
+# RIN
+
+colData(rse_brain)[63,]$gtex.smrin
+
+# percentage of rRNA
+
+colData(rse_brain)[63,]$gtex.smrrnart
+```
+
+```{r}
+# REPLICATE 64 
+
+# number of reads in the replicate
+
+colData(rse_brain)[64]$"recount_qc.star.number_of_input_reads_both"
+
+# QUALITY PARAMETERS 
+
+# percentage of uniquely mapped reads
+
+colData(rse_brain)[64,]$'recount_qc.star.uniquely_mapped_reads_%_both'
+
+# RIN
+
+colData(rse_brain)[64,]$gtex.smrin
+
+# percentage of rRNA
+
+colData(rse_brain)[64,]$gtex.smrrnart
+```
+
+```{r}
+rse_brain_selected <- rse_brain[,c(59,63,64)]
+
+counts_brain_selected <- assays(rse_brain_selected)$counts
+
+rownames(counts_brain_selected) <- rowData(rse_brain)$gene_name
+```
+
+### LUNG
+
+The same preliminary analysis can be performed also for the lung samples:
+
+```{r}
+rse_lung <- readRDS('rse_lung.RDS')
+```
+
+```{r}
+# transforming counts 
+
+assays(rse_lung)$counts <- transform_counts(rse_lung)
+```
+
+```{r}
+# INFO ABOUT THE SOURCE OF THE SAMPLES 
+
+# checking the info about the source organs of the samples
+
+table(colData(rse_lung)$gtex.smtsd)
+
+# checking the info about the age of the donors 
+
+table(colData(rse_lung)$gtex.age)
+
+# checking the info about the sex of the donors 
+
+table(colData(rse_lung)$gtex.sex)
+```
+
+```{r}
+## REPLICATE 58 
+# number of reads in the replicate
+
+colData(rse_lung)[58]$"recount_qc.star.number_of_input_reads_both"
+
+# QUALITY PARAMETERS 
+
+# percentage of uniquely mapped reads
+
+colData(rse_lung)[58,]$'recount_qc.star.uniquely_mapped_reads_%_both'
+
+# RIN
+
+colData(rse_lung)[58,]$gtex.smrin
+
+# percentage of rRNA
+
+colData(rse_lung)[58]$gtex.smrrnart
+```
+
+```{r}
+## REPLICATE 60
+# number of reads in the replicate
+
+colData(rse_lung)[60]$"recount_qc.star.number_of_input_reads_both"
+
+# QUALITY PARAMETERS 
+
+# percentage of uniquely mapped reads
+
+colData(rse_lung)[60,]$'recount_qc.star.uniquely_mapped_reads_%_both'
+
+# RIN
+
+colData(rse_lung)[60,]$gtex.smrin
+
+# percentage of rRNA
+
+colData(rse_lung)[60,]$gtex.smrrnart
+```
+
+```{r}
+## REPLICATE 61
+# number of reads in the replicate
+
+colData(rse_lung)[61]$"recount_qc.star.number_of_input_reads_both"
+
+# QUALITY PARAMETERS 
+
+# percentage of uniquely mapped reads
+
+colData(rse_lung)[61,]$'recount_qc.star.uniquely_mapped_reads_%_both'
+
+# RIN
+
+colData(rse_lung)[61,]$gtex.smrin
+
+# percentage of rRNA
+
+colData(rse_lung)[61,]$gtex.smrrnart
+```
+
+```{r}
+rse_lung_selected <- rse_lung[,c(58,60,61)]
+
+counts_lung_selected <- assays(rse_lung_selected)$counts
+
+rownames(counts_lung_selected) <- rowData(rse_lung)$gene_name
+```
+
+### LIVER
+
+```{r}
+#rse_liver <- readRDS('rse_liver.RDS')
+```
+
+```{r}
+# transforming counts
+assays(rse_liver)$counts <- transform_counts(rse_liver)
+```
+
+```{r}
+# INFO ABOUT THE SOURCE OF THE SAMPLES 
+
+# checking the info about the source organs of the samples
+
+table(colData(rse_liver)$gtex.smtsd)
+
+# checking the info about the age of the donors 
+
+table(colData(rse_liver)$gtex.age)
+
+# checking the info about the sex of the donors 
+
+table(colData(rse_liver)$gtex.sex)
+```
+
+
+```{r}
+## REPLICATE 59
+# number of reads in the replicate
+
+colData(rse_liver)[59]$"recount_qc.star.number_of_input_reads_both"
+
+# QUALITY PARAMETERS 
+
+# percentage of uniquely mapped reads
+
+colData(rse_liver)[59,]$'recount_qc.star.uniquely_mapped_reads_%_both'
+
+# RIN
+
+colData(rse_liver)[59,]$gtex.smrin
+
+# percentage of rRNA
+
+colData(rse_liver)[59]$gtex.smrrnart
+```
+
+```{r}
+## REPLICATE 66
+# number of reads in the replicate
+
+colData(rse_liver)[66]$"recount_qc.star.number_of_input_reads_both"
+
+# QUALITY PARAMETERS 
+
+# percentage of uniquely mapped reads
+
+colData(rse_liver)[66]$'recount_qc.star.uniquely_mapped_reads_%_both'
+
+# RIN
+
+colData(rse_liver)[66,]$gtex.smrin
+
+# percentage of rRNA
+
+colData(rse_liver)[66,]$gtex.smrrnart
+```
+
+```{r}
+## REPLICATE 70 
+# number of reads in the replicate
+
+colData(rse_liver)[70]$"recount_qc.star.number_of_input_reads_both"
+
+# QUALITY PARAMETERS 
+
+# percentage of uniquely mapped reads
+
+colData(rse_liver)[70,]$'recount_qc.star.uniquely_mapped_reads_%_both'
+
+# RIN
+
+colData(rse_liver)[70,]$gtex.smrin
+
+# percentage of rRNA
+
+colData(rse_liver)[70,]$gtex.smrrnart
+```
+
+```{r}
+rse_liver_selected <- rse_liver[,c(59,66,70)]
+
+counts_liver_selected <- assays(rse_liver_selected)$counts
+
+rownames(counts_liver_selected) <- rowData(rse_liver)$gene_name
+```
+
+### GROUPING THE DATA 
+
+Once we have collected the replicates to perform our analysis, we can build the count table and re-name the columns: 
+
+```{r}
+data <- cbind(counts_brain_selected, counts_liver_selected, counts_lung_selected)
+
+colnames(data) <- c('Brain59', 'Brain63', 'Brain64', 'Liver59', 'Liver66', 'Liver70', 'Lung58', 'Lung60', 'Lung61')
+```
+
+## DIFFERENTIAL EXPRESSION GENE ANALYSIS 
+
+```{r}
+# building the DGE object 
+
+y <- DGEList(counts=data)
+```
+
+```{r}
+# define how replicates are grouped 
+group <- as.factor(c("Brain", "Brain", "Brain", "Liver", "Liver", "Liver", "Lung", "Lung", "Lung"))
+
+y$samples$group <- group
+y
+```
+
+It might be useful to add fields regarding the quality information of the samples:
+
+```{r}
+# RIN number 
+y$samples$rin <- as.factor(c(colData(rse_brain_selected)$gtex.smrin,colData(rse_liver_selected)$gtex.smrin,colData(rse_lung_selected)$gtex.smrin))
+ 
+# tissue 
+y$samples$slice <- as.factor(c(colData(rse_brain_selected)$gtex.smtsd,colData(rse_liver_selected)$gtex.smtsd,colData(rse_lung_selected)$gtex.smtsd))
+
+# sex
+y$samples$sex <- as.factor(c(colData(rse_brain_selected)$gtex.sex,colData(rse_liver_selected)$gtex.sex,colData(rse_lung_selected)$gtex.sex))
+
+# age
+y$samples$age <- as.factor(c(colData(rse_brain_selected)$gtex.age,colData(rse_liver_selected)$gtex.age,colData(rse_lung_selected)$gtex.age))
+
+# percentage of rRNA 
+y$samples$rRNA <- as.factor(c(colData(rse_brain_selected)$gtex.smrrnart,colData(rse_liver_selected)$gtex.smrrnart,colData(rse_lung_selected)$gtex.smrrnart))
+
+# percentage of mapped reads 
+y$samples$mapped <- as.factor(c(colData(rse_brain_selected)$"recount_qc.star.uniquely_mapped_reads_%_both", colData(rse_liver_selected)$"recount_qc.star.uniquely_mapped_reads_%_both",colData(rse_lung_selected)$"recount_qc.star.uniquely_mapped_reads_%_both"))
+
+# percentage og chrM
+y$samples$chrm <- as.factor(c(colData(rse_brain_selected)$"recount_qc.aligned_reads%.chrm", colData(rse_liver_selected)$"recount_qc.aligned_reads%.chrm",colData(rse_lung_selected)$"recount_qc.aligned_reads%.chrm"))
+y
+```
+
+Then, we can check how many genes have 0 count:
+
+```{r}
+table(rowSums(y$counts==0)==9)
+```
+
+This genes should be removed, since they might generate false positives and bias the results in the downstream analyses:
+
+```{r}
+keep.exprs <- filterByExpr(y, group=group)
+y <- y[keep.exprs,, keep.lib.sizes=FALSE]
+```
+
+```{r}
+# log counts per million before normalization 
+
+logcpm_before <- cpm(y, log=TRUE)
+```
+
+```{r}
+# normalize count values with the TMM method 
+
+y <- calcNormFactors(y, method = "TMM")
+y
+```
+
+```{r}
+logcpm <- cpm(y, log=TRUE)
+```
+
+We can compare the distribution of the read counts before and after normalization:
+
+```{r}
+boxplot(logcpm) # after normalization
+boxplot(logcpm_before) # before normalization
+```
+
+### DESIGN THE MODEL 
+
+The next step is designing the linear model, which is able to model the dependencies among the samples taken into account and to estimate the distribution parameters of all samples simultaneously, providing an efficient way to compare gene expression. We choose not to fit the intercept because there isn't any base condition in this comparison:
+
+```{r}
+design <- model.matrix(~0+group,data=y$samples)  
+colnames(design) <- levels(y$samples$group)
+design
+```
+
+Then, we check if the replicates cluster together, and they do. We employ the MDS function, that plots the replicates in a 2D scatterplot in such a way that their distance approximates the log2 fold changes:
+
+```{r}
+plotMDS(logcpm, labels=group)
+```
+
+We now estimate the NB dispersion and plot the Biological Coefficient of Variation, both common and gene specific:
+
+```{r}
+y <- estimateDisp(y, design)
+
+plotBCV(y)
+summary(y)
+```
+
+```{r}
+y$common.dispersion
+```
+
+N.B.: actual dispersion considers the dispersion, the trend and the common.
+
+### FITTING THE MODELS  
+
+In order to test for differentially expressed genes, we need to fit the data into the linear model we previously designed:
+
+```{r}
+fit <- glmQLFit(y, design) 
+```
+
+Then, we need to design the contrasts by specifying the samples that we want to compare. 
+```{r}
+# BRAIN VS LIVER
+
+qlf.brainvsliver <- glmQLFTest(fit, contrast=c(1,-1,0)) # design the contrast
+
+topTags(qlf.brainvsliver) # see the genes with the lowest p-value
+
+FDRbrainliver <- p.adjust(qlf.brainvsliver$table$PValue, method="BH")
+
+# select the genes by choosing the most significants according to the adjusted p-values (FDR lower than 0.05):
+
+sum(FDRbrainliver < 0.05) 
+
+# select the genes that also have a log-fold change greater than 1 or lower than -1: 
+
+summary(decideTests(qlf.brainvsliver, p.value=0.01, lfc=1)) #thresholds
+
+# saving the list of selected genes:
+
+results.brainvsliver <- topTags(qlf.brainvsliver, n = 10000000, adjust.method = 'BH', sort.by = 'PValue')
+```
+
+Given how we designed the contrast matrix, a gene with a log-fold change greater than 1 will be overexpressed in brain, while a gene with a  log-fold change lower than -1 will be overexpressed in liver:
+
+DYNC1I1: Dynein Cytoplasmic 1 Intermediate Chain 1. Microtubule binding and cytoskeletal motor activity. Expressed mainly in nervous system.
+
+RAB17: Ras-Related Protein Rab-17 (RAS oncogene family). Epithelial cell-specific GTPase. Overexpressed in liver and kidney (also in brain, but only in fetal stage) 
+
+TDO2: Tryptophan 2,3-Dioxygenase. Heme enzyme that plays a  role in tryptophan metabolism, may have a role in cancer. Overexpressed in liver (-> heme production)
+
+AKR7A3: Aldo-Keto Reductase Family 7 Member A3. Etoxification of aldehydes and ketones. May be involved in protection of liver against the toxic and carcinogenic effects of AFB1, a potent hepatocarcinogen
+
+HPGD: 15-Hydroxyprostaglandin Dehydrogenase. Involved in the metabolism of prostaglandins. Mutations in this gene result in primary autosomal recessive hypertrophic osteoarthropathy and cranioosteoarthropathy.
+
+MTTP: Microsomal Triglyceride Transfer Protein. Central role in lipoprotein assembly. Liver specific.    
+
+SERPINA10: Serpin Family A Member 10. It is predominantly expressed in the liver and secreted in plasma. It inhibits the activity of coagulation factors Xa and XIa in the presence of protein Z, calcium and phospholipid.
+
+CPN2: Carboxypeptidase N Subunit 2. Involved in regulation of catalytic activity. Overxpressed in liver  
+
+ACSM2B: Acyl-CoA Synthetase Medium Chain Family Member 2B. Enables benzoate-CoA ligase activity. Overexpressed in liver. 
+
+PAH: Phenylalanine Hydroxylase. Overexpressed in liver. 
+
+```{r}
+# BRAIN VS LUNG
+
+qlf.brainvslung <- glmQLFTest(fit, contrast=c(1,0,-1)) 
+topTags(qlf.brainvslung)
+
+FDRbrainlung <- p.adjust(qlf.brainvslung$table$PValue, method="BH")
+sum(FDRbrainlung < 0.05)
+summary(decideTests(qlf.brainvslung, p.value=0.01, lfc=1))
+
+results.brainvslung <- topTags(qlf.brainvslung, n = 10000000, adjust.method = 'BH', sort.by = 'PValue')
+```
+Given how we designed the contrast matrix, a gene with a log-fold change greater than 1 will be over-expressed in brain, while a gene with a log-fold change lower than -1 will be over-expressed in lung:
+
+CEND1: Cell Cycle Exit and Neuronal Differentiation 1. Neuron specific protein. Neuronal differentiation.
+
+OGDHL: Oxoglutarate Dehydrogenase L. Mitochondria? Identified in brain.
+
+ECE2: Endothelin Converting Enzyme 2. Neuroendocrine peptides.
+
+RAB3A: Member RAS Oncogene Family. Sensory processing of sound and Neurotransmitter release cycle.
+
+APC2: APC Regulator of WNT Signaling Pathway 2. Alzheimer's disease. Highest expression in the central nervous system, envolved in brain development.
+
+MYT1L: Myelin Transcription Factor 1 Like. Transcirption factor that plays a key role in neuronal differentiation.
+
+HPGD: 15-Hydroxyprostaglandin Dehydrogenase. Variety of physiologic and cellular processes such as inflammation. Metabolism.
+
+SHANK1: SH3 And Multiple Ankyrin Repeat Domains 1. Associated with Autism Spectrum Disorder. Adapter protein in the postsynaptic density of excitatory synapsis.
+
+DYNC1I1: Dynein Cytoplasmic 1 Intermediate Chain 1. Deficiency associated with neuronal atrophy. 
+
+DGCR5: DiGeorge Syndrome Critical Region Gene 5. RNA gene, may regulate expression of several schizophrenia related genes.
+
+```{r}
+# LIVER VS LUNG
+
+qlf.livervslung <- glmQLFTest(fit, contrast=c(0,1,-1))
+topTags(qlf.livervslung)
+
+FDRliverlung <- p.adjust(qlf.livervslung$table$PValue, method="BH")
+sum(FDRliverlung < 0.05)
+summary(decideTests(qlf.livervslung, p.value=0.01, lfc=1))
+
+results.livervslung <- topTags(qlf.livervslung, n = 10000000, adjust.method = 'BH', sort.by = 'PValue')
+```
+Given how we designed the contrast matrix, a gene with a log-fold change greater than 1 will be over-expressed in liver, while a gene with a  log-fold change lower than -1 will be over-expressed in lung. We notice that these genes are all over-expressed in liver:
+
+AKR7A3: Aldo-Keto Reductase Family 7 Member A3. Metabolism and Oxcarbazepine pathways.
+
+SERPINA10: Serpin Family A Member 10. Predominantly expressed in the liver. Inhibits the activity of coagulation factors Xa and XIa in the presence of protein Z.
+
+PAH: Phenylalanine Hydroxilase. Member of the biopterin-dependet aromatic amino acid hydroxylase protein family. Catabolism and Metabolism.
+
+OGDHL: 	Oxoglutarate Dehydrogenase L. Mainly in the mitochondrion. Decarboxylation of alpha-ketoglutarate in the tricarboxylic acid cycle. Lipid metabolism.
+
+CHRNA4: Colinergic Receptor Nicotinic Alpha 4 subunit. Non neuronal-specific expression patterns, highly expressed in liver. Nicotine metabolism. 
+
+HNF1A: HNF1 Homebox A. Transcription factor for the expression of several liver-specific genes.
+
+MTTP: Microsomal Triglyceride Transfer Protein. Catalyzes the transport of triglyceride, cholesteryl ester and phospholipid between phospholipid surfaces.
+
+CPN2: Carboxypeptidase N Subunit 2. Complement cascade and Innate Immune System. Catalytic activity. Extracellular exosome.
+
+HAO2: Hydroxyacid Oxidase 2. Catalyzes the oxidation of hydroxyacids. Metabolism and Peroxisomal lipid metabolism.
+
+ACSM2B: Acyl--CoA synthetase Medium Chain Family Member 2B. Acyl-CoA metabolic process and fatty acid biosynthetic process. Mitochondrion.
+
+### RETRIEVING THE FINAL RESULTS
+
+Finally, we select the genes differentially expressed in one tissue against the other two:
+
+```{r}
+# GENES OVEREXPRESSED IN BRAIN: 
+
+brain_brainvsliver <- rownames(as.data.frame(results.brainvsliver)[as.data.frame(results.brainvsliver)$logFC > 1 & as.data.frame(results.brainvsliver)$FDR < 0.01 & as.data.frame(results.brainvsliver)$logCPM > 0 ,])
+
+brain_brainvslung <- rownames(as.data.frame(results.brainvslung)[as.data.frame(results.brainvslung)$logFC > 1 & as.data.frame(results.brainvslung)$FDR < 0.01 & as.data.frame(results.brainvslung)$logCPM > 0 ,])
+
+brain_vs_lungliver <- intersect(brain_brainvsliver, brain_brainvslung)
+```
+
+```{r}
+# GENES OVEREXPRESSED IN LIVER: 
+
+liver_brainvsliver <- rownames(as.data.frame(results.brainvsliver)[as.data.frame(results.brainvsliver)$logFC < -1 & as.data.frame(results.brainvsliver)$FDR < 0.01 & as.data.frame(results.brainvsliver)$logCPM > 0 ,])
+
+liver_livervslung <- rownames(as.data.frame(results.livervslung)[as.data.frame(results.livervslung)$logFC > 1 & as.data.frame(results.livervslung)$FDR < 0.01 & as.data.frame(results.livervslung)$logCPM > 0 ,])
+
+liver_vs_lungbrain <- intersect(liver_brainvsliver, liver_livervslung)
+
+length(liver_vs_lungbrain)
+```
+
+```{r}
+# GENES OVEREXPRESSED IN LUNG: 
+
+lung_brainvslung <- rownames(as.data.frame(results.brainvslung)[as.data.frame(results.brainvslung)$logFC < -1 & as.data.frame(results.brainvslung)$FDR < 0.01 & as.data.frame(results.brainvslung)$logCPM > 0  ,])
+
+lung_livervslung <- rownames(as.data.frame(results.livervslung)[as.data.frame(results.livervslung)$logFC < -1 & as.data.frame(results.livervslung)$FDR < 0.01 & as.data.frame(results.livervslung)$logCPM > 0 ,])
+
+lung_vs_liverbrain <- intersect(liver_brainvsliver, lung_livervslung)
+
+length(lung_vs_liverbrain)
+```
+
+
+# ANALYSIS WITHOUT PSEUDOGENES, MITOCHONDRIAL GENES OR ALTERNATIVE CHROMOSOMES:
+
+## LOADING THE DATA
+
+We repeat the same analysis as before by removing all the pseudogenes, the genes on alternative chromosomes and the mitocondrial genes, because these kind of genes might take a discrete number of reads from the others without being really significant from a biological point of view. 
+We again load the datasets:
+
+```{r}
+rse_brain <- readRDS('rse_brain.RDS')
+
+rse_lung <- readRDS('rse_lung.RDS')
+
+rse_liver <- readRDS('rse_liver.RDS')
+```
+
+and check if there are non-canonical chromosomes:
+
+```{r}
+table(rowRanges(rse_brain)@seqnames)
+```
+
+```{r}
+## CREATE A CANONICAL RSE OBJECT
+
+# Define canonical chromosome keys
+
+canonical <- paste("chr", seq(1,22), sep="")
+canonical <- c(canonical, "chrX", "chrY")
+
+# Filter according tho the canonical keys 
+
+# brain
+rse_brain_canonical <- rse_brain[rowData(rse_brain)$gbkey != 'rRNA' & rowData(rse_brain)$gbkey != 'Gene' & rowRanges(rse_brain)@seqnames %in% canonical & !is.na(rowData(rse_brain)$gbkey),]
+
+# liver
+rse_liver_canonical <- rse_liver[
+# Ribosomal RNA
+rowData(rse_liver)$gbkey != 'rRNA' &
+# Pseudogenes
+rowData(rse_liver)$gbkey != 'Gene' &
+# Exclude Non-canonical Chromosomes and Mitochondrial DNA
+rowRanges(rse_liver)@seqnames %in% canonical &
+# NAs
+!is.na(rowData(rse_liver)$gbkey),]
+
+# lung
+rse_lung_canonical <- rse_lung[
+# Ribosomal RNA
+rowData(rse_lung)$gbkey != 'rRNA' &
+# Pseudogenes
+rowData(rse_lung)$gbkey != 'Gene' &
+# Exclude Non-canonical Chromosomes and Mitochondrial DNA
+rowRanges(rse_lung)@seqnames %in% canonical &
+# NAs
+!is.na(rowData(rse_lung)$gbkey),]
+
+# Transform gene coverage to counts
+
+assays(rse_brain_canonical)$counts <- transform_counts(rse_brain_canonical)
+assays(rse_liver_canonical)$counts <- transform_counts(rse_liver_canonical)
+assays(rse_lung_canonical)$counts <- transform_counts(rse_lung_canonical)
+
+counts_brain_canonical <- assays(rse_brain_canonical)$counts
+counts_liver_canonical <- assays(rse_liver_canonical)$counts
+counts_lung_canonical <- assays(rse_lung_canonical)$counts
+
+# Rename the rows according to the gene names 
+rownames(counts_brain_canonical) <- rowData(rse_brain_canonical)$gene_name
+rownames(counts_liver_canonical) <- rowData(rse_liver_canonical)$gene_name
+rownames(counts_lung_canonical) <- rowData(rse_lung_canonical)$gene_name
+
+```
+
+### GROUPING THE DATA 
+
+```{r}
+rse_brain_selected <- rse_brain_canonical[,c(59,63,64)]
+
+counts_brain_selected <- assays(rse_brain_selected)$counts
+
+rownames(counts_brain_selected) <- rowData(rse_brain_canonical)$gene_name
+```
+
+```{r}
+rse_lung_selected <- rse_lung_canonical[,c(58,60,61)]
+
+counts_lung_selected <- assays(rse_lung_selected)$counts
+
+rownames(counts_lung_selected) <- rowData(rse_lung_canonical)$gene_name
+```
+
+```{r}
+rse_liver_selected <- rse_liver_canonical[,c(59,66,70)]
+
+counts_liver_selected <- assays(rse_liver_selected)$counts
+
+rownames(counts_liver_selected) <- rowData(rse_liver_canonical)$gene_name
+```
+
+```{r}
+data_canonical <- cbind(counts_brain_selected, counts_liver_selected, counts_lung_selected)
+```
+
+## DIFFERENTIAL EXPRESSION GENE ANALYSIS 
+
+We first build the DGE object:
+
+```{r}
+y_canonical <- DGEList(counts=data_canonical)
+```
+
+And add parameters regarding the quality of the samples:
+
+```{r}
+group <- as.factor(c("Brain", "Brain", "Brain", "Liver", "Liver", "Liver", "Lung", "Lung", "Lung"))
+y_canonical$samples$group <- group
+
+# RIN number 
+y_canonical$samples$rin <- as.factor(c(colData(rse_brain_selected)$gtex.smrin,colData(rse_liver_selected)$gtex.smrin,colData(rse_lung_selected)$gtex.smrin))
+
+# tissue
+y_canonical$samples$slice <- as.factor(c(colData(rse_brain_selected)$gtex.smtsd,colData(rse_liver_selected)$gtex.smtsd,colData(rse_lung_selected)$gtex.smtsd))
+
+# sex of the donor 
+y_canonical$samples$sex <- as.factor(c(colData(rse_brain_selected)$gtex.sex,colData(rse_liver_selected)$gtex.sex,colData(rse_lung_selected)$gtex.sex))
+
+# age of the donor
+y_canonical$samples$age <- as.factor(c(colData(rse_brain_selected)$gtex.age,colData(rse_liver_selected)$gtex.age,colData(rse_lung_selected)$gtex.age))
+
+# percentage of rRNA
+y_canonical$samples$rRNA <- as.factor(c(colData(rse_brain_selected)$gtex.smrrnart,colData(rse_liver_selected)$gtex.smrrnart,colData(rse_lung_selected)$gtex.smrrnart))
+
+# percentage of chrm
+y_canonical$samples$chrm <- as.factor(c(colData(rse_brain_selected)$`recount_qc.aligned_reads%.chrm`, colData(rse_liver_selected)$`recount_qc.aligned_reads%.chrm`,colData(rse_lung_selected)$`recount_qc.aligned_reads%.chrm`))
+
+y_canonical
+```
+
+We then check how many genes have zero count:
+
+```{r}
+table(rowSums(y_canonical$counts==0)==9)
+```
+
+and remove them:
+
+```{r}
+keep.exprs <- filterByExpr(y_canonical, group=group)
+y_canonical <- y_canonical[keep.exprs,, keep.lib.sizes=FALSE]
+```
+
+Then, we apply normalization and compare the distribution of counts before and after normalizing:
+
+```{r}
+logcpm_before <- cpm(y_canonical, log=TRUE)
+```
+
+```{r}
+# TMM normalization
+y_canonical <- calcNormFactors(y_canonical, method = "TMM")
+y_canonical
+```
+
+```{r}
+logcpm <- cpm(y_canonical, log=TRUE)
+```
+
+Plotting the comparisons:
+
+```{r}
+boxplot(logcpm) # after normalization
+boxplot(logcpm_before) # before normalization
+```
+
+### DESIGN THE MODEL 
+
+Once again, when designing the model to perform the parameter estimation and the differential expression analysis, we remove the intercept because there is not a baseline condition:
+
+```{r}
+design_canonical <- model.matrix(~0+group,data=y_canonical$samples) 
+colnames(design_canonical) <- levels(y_canonical$samples$group)
+design_canonical
+```
+
+We verify if the replicates cluster together:
+
+```{r}
+plotMDS(logcpm, labels=group)
+```
+
+then estimate the NB dispersion and plot the Biological Coefficient of Variation, both common and gene specific:
+
+```{r}
+y_canonical <- estimateDisp(y_canonical, design_canonical)
+
+plotBCV(y_canonical)
+summary(y_canonical)
+```
+
+```{r}
+y_canonical$common.dispersion # common dispersion, of y
+```
+
+### FITTING THE MODEL 
+
+We again design the linear model:
+
+```{r}
+fit_canonical <- glmQLFit(y_canonical, design_canonical)
+
+?glmQLFTest
+```
+
+and then define the contrast matrix, one for each pair comparison:
+
+```{r}
+# BRAIN VS LIVER
+qlf.brainvsliver_canonical <- glmQLFTest(fit_canonical, contrast=c(1,-1,0)) 
+
+topTags(qlf.brainvsliver_canonical)
+
+# select the most significant differentially expressed genes, based on FDR and log-fold change as before:
+FDRbrainliver_canonical <- p.adjust(qlf.brainvsliver_canonical$table$PValue, method="BH")
+sum(FDRbrainliver_canonical < 0.05)
+summary(decideTests(qlf.brainvsliver_canonical, p.value=0.01, lfc=1)) 
+
+# storing the results
+
+results.brainvsliver_canonical <- topTags(qlf.brainvsliver_canonical, n = 10000000, adjust.method = 'BH', sort.by = 'PValue')
+```
+Given how we designed the contrasts, the genes with a log-fold change grater than 1 are over-expressed in brain, while the genes with a log-fold change lower than -1 are overexpressed in liver:
+
+DYNC1I1: Dynein Cytoplasmic 1 Intermediate Chain 1. Microtubule binding and cytoskeletal motor activity. Expressed mainly in nervous system.
+
+TDO2: Tryptophan 2,3-Dioxygenase. Heme enzyme that plays a  role in tryptophan metabolism, may have a role in cancer. Overexpressed in liver (-> heme production)
+
+MTTP: Microsomal Triglyceride Transfer Protein. Central role in lipoprotein assembly. Liver specific.    
+
+SERPINA10: Serpin Family A Member 10. It is predominantly expressed in the liver and secreted in plasma. It inhibits the activity of coagulation factors Xa and XIa in the presence of protein Z, calcium and phospholipid.
+
+CPN2: Carboxypeptidase N Subunit 2. Involved in regulation of catalytic activity. Overxpressed in liver  
+
+PAH: Phenylalanine Hydroxylase. Overexpressed in liver. 
+
+Compared to the analysis on the whole gene set, we identified NEW genes in the differentially expressed output:
+
+HAO2: Hydroxyacid Oxidase 2. Catalyzes the oxidation of hydroxyacids. Metabolism and Peroxisomal lipid metabolism.
+
+CYP8B1: Cytochrome P450 Family 8 Subfamily B Member 1. Diseases associated with CYP8B1 include Extrahepatic Cholestasis and Bile Duct Disease. Among its related pathways are Metabolism of steroids and Synthesis of bile acids and bile salts.
+
+F5: Coagulation Factor 5. Diseases associated with F5 include Factor V Deficiency and Thrombophilia Due To Activated Protein C Resistance. Among its related pathways are Defects of contact activation system (CAS) and kallikrein/kinin system (KKS) and Regulation of Insulin-like Growth Factor (IGF) transport and uptake by Insulin-like Growth Factor Binding Proteins (IGFBPs).
+
+CDR1: Cerebellar Degeneration Related Protein 1. Diseases associated with CDR1 include Cerebellar Degeneration and Paraneoplastic Cerebellar Degeneration.
+
+On the other hand, a few genes were not in the top list anymore:
+
+RAB17: Ras-Related Protein Rab-17 (RAS oncogene family). Epithelial #cell-specific GTPase. Overexpressed in liver and kidney (also in brain, but #only in fetal stage)
+
+AKR7A3: Aldo-Keto Reductase Family 7 Member A3. Etoxification of aldehydes and #ketones. May be involved in protection of liver against the toxic and #carcinogenic effects of AFB1, a potent hepatocarcinogen
+
+HPGD: 15-Hydroxyprostaglandin Dehydrogenase. Involved in the metabolism of prostaglandins. Mutations in this gene result in primary autosomal recessive #hypertrophic osteoarthropathy and cranioosteoarthropathy
+
+ACSM2B: Acyl-CoA Synthetase Medium Chain Family Member 2B. Enables benzoate-CoA #ligase activity. Overexpressed in liver. Located in the mitochondrion
+
+```{r}
+# BRAIN VS LUNG
+
+qlf.brainvslung_canonical <- glmQLFTest(fit_canonical, contrast=c(1,0,-1))
+topTags(qlf.brainvslung_canonical)
+
+# selecting the most significant differentually expressed genes according to FDR and log-fold change
+FDRbrainlung_canonical <- p.adjust(qlf.brainvslung_canonical$table$PValue, method="BH")
+sum(FDRbrainlung_canonical < 0.05)
+summary(decideTests(qlf.brainvslung_canonical, p.value=0.01, lfc=1))
+
+# storing the results
+
+results.brainvslung_canonical <- topTags(qlf.brainvslung_canonical, n = 10000000, adjust.method = 'BH', sort.by = 'PValue')
+```
+Given how we designed the contrasts, the genes with a log-fold change grater than 1 are over-expressed in brain, while the genes with a log-fold change lower than -1 are overexpressed in lung:
+
+CEND1: Cell Cycle Exit and Neuronal Differentiation 1. Neuron specific protein. Neuronal differentiation.
+
+ECE2: Endothelin Converting Enzyme 2. Neuroendocrine peptides.
+
+RAB3A: Member RAS Oncogene Family. Sensory processing of sound and Neurotransmitter release cycle.
+
+APC2: APC Regulator of WNT Signaling Pathway 2. Alzheimer's disease. Highest expression in the central nervous system, envolved in brain development.
+
+MYT1L: Myelin Transcription Factor 1 Like. Transcirption factor that plays a key role in neuronal differentiation.
+
+SHANK1: SH3 And Multiple Ankyrin Repeat Domains 1. Associated with Autism Spectrum Disorder. Adapter protein in the postsynaptic density of excitatory synapsis.
+
+DYNC1I1: Dynein Cytoplasmic 1 Intermediate Chain 1. Deficiency associated with neuronal atrophy. 
+
+DGCR5: DiGeorge Syndrome Critical Region Gene 5. RNA gene, may regulate expression of several schizophrenia related genes.
+
+Compared to the analysis on the whole gene set, we identified new genes in the differentially expressed output:
+
+ADGRE5: Adhesion G Protein-Coupled Receptor E5. Associated with Thyroid Gland Anaplastic Carcinoma. Lung.
+
+On the other hand, a few genes were not in the top list anymore:
+
+OGDHL: Oxoglutarate Dehydrogenase L. Mitochondria. Identified in brain
+
+HPGD: 15-Hydroxyprostaglandin Dehydrogenase. Variety of physiologic and cellular processes such as inflammation. Metabolism.
+
+```{r}
+# LIVER VS LUNG
+
+qlf.livervslung_canonical <- glmQLFTest(fit_canonical, contrast=c(0,1,-1)) 
+topTags(qlf.livervslung_canonical)
+
+# selecting the most significant differentually expressed genes according to FDR and log-fold change
+FDRliverlung_canonical <- p.adjust(qlf.livervslung_canonical$table$PValue, method="BH")
+sum(FDRliverlung_canonical < 0.05)
+summary(decideTests(qlf.livervslung_canonical, p.value=0.01, lfc=1))
+
+# storing the results
+results.livervslung_canonical <- topTags(qlf.livervslung_canonical, n = 10000000, adjust.method = 'BH', sort.by = 'PValue')
+```
+Given how we designed the contrasts, the genes with a log-fold change grater than 1 are over-expressed in liver, while the genes with a log-fold change lower than -1 are overexpressed in lung (all genes are more expressed in the liver):
+
+SERPINA10: Serpin Family A Member 10. Predominantly expressed in the liver. Inhibits the activity of coagulation factors Xa and XIa in the presence of protein Z.
+
+PAH: Phenylalanine Hydroxilase. Member of the biopterin-dependet aromatic amino acid hydroxylase protein family. Catabolism and Metabolism.
+
+HNF1A: HNF1 Homebox A. Transcription factor for the expression of several liver-specific genes.
+
+MTTP: Microsomal Triglyceride Transfer Protein. Catalyzes the transport of triglyceride, cholesteryl ester and phospholipid between phospholipid surfaces.
+
+CPN2: Carboxypeptidase N Subunit 2. Complement cascade and Innate Immune System. Catalytic activity. Extracellular exosome.
+
+HAO2: Hydroxyacid Oxidase 2. Catalyzes the oxidation of hydroxyacids. Metabolism and Peroxisomal lipid metabolism.
+
+Compared to the analysis on the whole gene set, we identified NEW genes in the differentially expressed output:
+
+BAAT: Bile Acid-CoA:Amino Acid N-Acyltransferase. Among its related pathways are Metabolism of steroids and Peroxisomal lipid metabolism.
+
+ITIH2: Inter-Alpha-Trypsin Inhibitor Heavy Chain 2. Among its related pathways are Regulation of Insulin-like Growth Factor (IGF) transport and uptake by Insulin-like Growth Factor Binding Proteins (IGFBPs) and Metabolism of proteins.
+
+PRODH2: Proline Dehydrogenase 2. Diseases associated with PRODH2 include Primary Hyperoxaluria and Ascending Cholangitis. Among its related pathways are Proline catabolism and Metabolism.
+
+CYP8B1: Cytochrome P450 Family 8 Subfamily B Member 1. Diseases associated with CYP8B1 include Extrahepatic Cholestasis and Bile Duct Disease. Among its related pathways are Metabolism of steroids and Synthesis of bile acids and bile salts.
+
+On the other hand, a few genes were not in the top list anymore:
+
+AKR7A3: Aldo-Keto Reductase Family 7 Member A3. Metabolism and Oxcarbazepine #pathways
+
+OGDHL: Oxoglutarate Dehydrogenase L. Decarboxylation of alpha-ketoglutarate in the tricarboxylic acid cycle. Lipid metabolism. Mainly in the mitochondrion.
+
+CHRNA4: Colinergic Receptor Nicotinic Alpha 4 subunit. Non neuronal-specific #expression patterns, highly expressed in liver. Nicotine metabolism. 
+
+ACSM2B: Acyl--CoA synthetase Medium Chain Family Member 2B. Acyl-CoA metabolic #process and fatty acid biosynthetic process. Mitochondrion
+
+### RETRIEVING THE FINAL RESULTS
+
+Finally, we select the genes differentially expressed in one tissue against the other two:
+
+```{r}
+brain_brainvsliver_canonical <- rownames(as.data.frame(results.brainvsliver_canonical)[as.data.frame(results.brainvsliver_canonical)$logFC > 1 & as.data.frame(results.brainvsliver_canonical)$FDR < 0.01 & as.data.frame(results.brainvsliver_canonical)$logCPM > 0 ,])
+
+brain_brainvslung_canonical <- rownames(as.data.frame(results.brainvslung_canonical)[as.data.frame(results.brainvslung_canonical)$logFC > 1 & as.data.frame(results.brainvslung_canonical)$FDR < 0.01 & as.data.frame(results.brainvslung_canonical)$logCPM > 0 ,])
+
+brain_vs_lungliver_canonical <- intersect(brain_brainvsliver_canonical, brain_brainvslung_canonical)
+
+length(brain_vs_lungliver_canonical)
+```
+
+```{r}
+liver_brainvsliver_canonical <- rownames(as.data.frame(results.brainvsliver_canonical)[as.data.frame(results.brainvsliver_canonical)$logFC < -1 & as.data.frame(results.brainvsliver_canonical)$FDR < 0.01 & as.data.frame(results.brainvsliver_canonical)$logCPM > 0 ,])
+
+liver_livervslung_canonical <- rownames(as.data.frame(results.livervslung_canonical)[as.data.frame(results.livervslung_canonical)$logFC > 1 & as.data.frame(results.livervslung_canonical)$FDR < 0.01 & as.data.frame(results.livervslung_canonical)$logCPM > 0 ,])
+
+liver_vs_lungbrain_canonical <- intersect(liver_brainvsliver_canonical, liver_livervslung_canonical)
+
+length(liver_vs_lungbrain_canonical)
+```
+
+
+```{r}
+lung_brainvslung_canonical <- rownames(as.data.frame(results.brainvslung_canonical)[as.data.frame(results.brainvslung_canonical)$logFC < -1 & as.data.frame(results.brainvslung_canonical)$FDR < 0.05 & as.data.frame(results.brainvslung_canonical)$logCPM > 0 ,])
+
+lung_livervslung_canonical <- rownames(as.data.frame(results.livervslung_canonical)[as.data.frame(results.livervslung_canonical)$logFC < -1 & as.data.frame(results.livervslung_canonical)$FDR < 0.05 & as.data.frame(results.livervslung_canonical)$logCPM > 0 ,])
+
+lung_vs_liverbrain_canonical <- intersect(liver_brainvsliver_canonical, lung_livervslung_canonical)
+
+length(lung_vs_liverbrain_canonical)
+```
+
+# RETRIEVING THE FINAL LISTS
+
+Finally, we trim the lists of differentially expressed genes obtained during the analysis by removing the genes that have little or no annotation, and those that correspond to risbosomal proteins: 
+
+```{r}
+starts = c('LOC', 'LINC', 'MIR', 'SNORD', 'RPL')
+
+for(s in starts) {
+    lung_vs_liverbrain <- lung_vs_liverbrain[which(!startsWith(lung_vs_liverbrain, s))]
+    lung_vs_liverbrain_canonical <- lung_vs_liverbrain_canonical[which(!startsWith(lung_vs_liverbrain_canonical, s))]
+    brain_vs_lungliver <- brain_vs_lungliver[which(!startsWith(brain_vs_lungliver, s))]
+    brain_vs_lungliver_canonical <- brain_vs_lungliver_canonical[which(!startsWith(brain_vs_lungliver_canonical, s))]
+    liver_vs_lungbrain <- liver_vs_lungbrain[which(!startsWith(liver_vs_lungbrain, s))]
+    liver_vs_lungbrain_canonical <- liver_vs_lungbrain_canonical[which(!startsWith(liver_vs_lungbrain_canonical, s))]
+  }
+
+write.csv(lung_vs_liverbrain_canonical, file = 'lung_vs_liverbrain_canonical')
+
+write.csv(liver_vs_lungbrain_canonical, file = 'liver_vs_lungbrain_canonical')
+
+write.csv(brain_vs_lungliver_canonical, file = 'brain_vs_lungliver_canonical')
+
+write.csv(lung_vs_liverbrain, file = 'lung_vs_liverbrain')
+
+write.csv(liver_vs_lungbrain, file = 'liver_vs_lungbrain')
+
+write.csv(brain_vs_lungliver, file = 'brain_vs_lungliver')
+```
+
+# CHECKING TOP DIFFERENTIALLY EXPRESSED GENES 
+
+Finally, we select one gene differentially expressed in one tissue against the other two and check if this differential expression is present in all samples and not only in replicates. 
+We perform a statistical test and plot the results: 
+
+```{r}
+# NON CANONICAL  
+
+assays(rse_brain)$TPM <- recount::getTPM(rse_brain)
+assays(rse_lung)$TPM <- recount::getTPM(rse_lung)
+assays(rse_liver)$TPM <- recount::getTPM(rse_liver)
+which(rowData(rse_brain)$gene_name == "DYNC1I1")
+
+# 4 alternative transcripts found on genome browser 
+
+boxplot(assays(rse_brain)$TPM[46800,],assays(rse_lung)$TPM[46800,], assays(rse_liver)$TPM[46800,], outline=F )
+
+df_b=data.frame(TPM=assays(rse_brain)$TPM[46800,],group="Brain") 
+df_lu=data.frame(TPM=assays(rse_lung)$TPM[46800,],group="Lung") 
+df_li=data.frame(TPM=assays(rse_liver)$TPM[46800,],group="Liver") 
+data_DYNC1I1=rbind(df_b,df_lu,df_li)
+
+# statistical test 
+
+res_kruskal=data_DYNC1I1 %>% kruskal_test(TPM ~ group) 
+res_kruskal # 0 p value because it is only in brain 
+
+pwc2=data_DYNC1I1 %>% wilcox_test(TPM ~ group, p.adjust.method = "BH") 
+pwc2 
+
+pwc = pwc2 %>% add_xy_position(x = "group") #Auto-compute p-value label positions 
+ggboxplot(data_DYNC1I1, x = "group", y = "TPM",outlier.shape = NA,width = 0.5,title="DYNC1I1 expression across organs") + 
+stat_pvalue_manual(pwc,y.position = c(150,150,150)) + #Add the p-values to the plot 
+labs(subtitle = get_test_label(res_kruskal, detailed = TRUE),caption = get_pwc_label(pwc)) #test information (top:Kruskal, bottom:pairwise comparison)
+```
+
+```{r}
+# CANONICAL 
+
+assays(rse_brain_canonical)$TPM <- recount::getTPM(rse_brain_canonical)
+assays(rse_lung_canonical)$TPM <- recount::getTPM(rse_lung_canonical)
+assays(rse_liver_canonical)$TPM <- recount::getTPM(rse_liver_canonical)
+which(rowData(rse_liver_canonical)$gene_name == "SERPINA10")
+
+# 2 alternative transcripts
+
+boxplot(assays(rse_brain_canonical)$TPM[25571,],assays(rse_lung_canonical)$TPM[25571,], assays(rse_liver_canonical)$TPM[25571,], outline=F )
+
+df_b_c=data.frame(TPM=assays(rse_brain_canonical)$TPM[25571,],group="Brain") 
+df_lu_c=data.frame(TPM=assays(rse_lung_canonical)$TPM[25571,],group="Lung") 
+df_li_c=data.frame(TPM=assays(rse_liver_canonical)$TPM[25571,],group="Liver") 
+data_SERPINA10=rbind(df_b_c,df_lu_c,df_li_c)
+
+# statistical test 
+
+res_kruskal=data_SERPINA10 %>% kruskal_test(TPM ~ group) 
+res_kruskal # 0 p value bc it is only in brain 
+
+pwc2=data_SERPINA10 %>% wilcox_test(TPM ~ group, p.adjust.method = "BH") 
+pwc2 
+
+pwc = pwc2 %>% add_xy_position(x = "group") #Auto-compute p-value label positions 
+ggboxplot(data_SERPINA10, x = "group", y = "TPM",outlier.shape = NA,width = 0.5,title="SERPINA10 expression across organs") + 
+stat_pvalue_manual(pwc,y.position = c(1500,1500,1500)) + #Add the p-values to the plot 
+labs(subtitle = get_test_label(res_kruskal, detailed = TRUE),caption = get_pwc_label(pwc)) #test information (top:Kruskal, bottom:pairwise comparison)
+
+```
+
