@@ -1,4 +1,4 @@
-app/* linguist-documentation=false
+*.rmd linguist-language=R
 dist/* linguist-vendored=false
 
-*.rmd linguist-language=R
+
