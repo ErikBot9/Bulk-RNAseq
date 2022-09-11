@@ -1,4 +1,4 @@
-# Bulk-RNAseq
+# Bulk RNA-Seq
 This is a Bulk RNA-seq analysis that was carried in collaboration with @ErikBot9.  
 The DE analysis was performed through the edgeR package, while the expression data belonging to each replicate was taken from the recount3 package. 
 
